@@ -2,7 +2,6 @@ package com.example.clase6gtics.controller;
 
 import com.example.clase6gtics.entity.Employee;
 import com.example.clase6gtics.repository.EmployeeRepository;
-import org.hibernate.type.descriptor.java.SerializableJavaType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -18,37 +17,26 @@ import java.util.Optional;
 @RequestMapping("/employee")
 public class EmployeeController {
 
-    final EmployeeRepository employeeRepository;
+    private final EmployeeRepository employeeRepository;
 
     public EmployeeController(EmployeeRepository employeeRepository) {
         this.employeeRepository = employeeRepository;
     }
 
-    @GetMapping(value = {"", "/", "list"})
-    public String listarEmpleados(Model model) {
+    @GetMapping(value = {"", "/"})
+    public String listaEmpleados(Model model) {
         model.addAttribute("listaEmpleados", employeeRepository.findAll());
-        model.addAttribute("listaEmpleadosPorRegion", employeeRepository.obtenerEmpleadosPorRegion());
-        model.addAttribute("listaEmpleadosPorPais", employeeRepository.obtenerEmpleadosPorPais());
         return "employee/list";
     }
 
     @GetMapping("/new")
     public String nuevoEmpleadoFrm(Model model, @ModelAttribute("employee") Employee employee) {
         model.addAttribute("listaJefes", getListaJefes());
-        return "employee/newFrm";
-    }
-
-    public List<Employee> getListaJefes() {
-        List<Employee> listaJefes = employeeRepository.findAll();
-        Employee e = new Employee();
-        e.setId(0);
-        e.setFirstname("--No tiene Jefe--");
-        listaJefes.add(0, e);
-        return listaJefes;
+        return "employee/editFrm";
     }
 
     @PostMapping("/save")
-    public String guardarEmpleado(Employee employee,
+    public String guardarEmpleado(RedirectAttributes attr, @ModelAttribute("employee") Employee employee,
                                   @RequestParam("birthdateStr") String birthdateStr,
                                   @RequestParam("hiredateStr") String hiredateStr) {
 
@@ -61,22 +49,23 @@ public class EmployeeController {
         }
 
         employeeRepository.save(employee);
+        attr.addFlashAttribute("msg", "Empleado guardado exitosamente");
         return "redirect:/employee";
     }
 
     @GetMapping("/edit")
-    public String editarEmpleado(@ModelAttribute("employee") Employee employee, Model model,  @RequestParam("id") int id) {
+    public String editarEmpleado(Model model, @ModelAttribute("employee") Employee employee,
+                                 @RequestParam("id") int id) {
         Optional<Employee> optional = employeeRepository.findById(id);
 
         if (optional.isPresent()) {
             employee = optional.get();
-            model.addAttribute("employee", optional.get());
+            model.addAttribute("employee", employee);
             model.addAttribute("listaJefes", getListaJefes());
             return "employee/editFrm";
         } else {
             return "redirect:/employee";
         }
-
     }
 
     @GetMapping("/delete")
@@ -85,8 +74,17 @@ public class EmployeeController {
 
         if (optional.isPresent()) {
             employeeRepository.deleteById(id);
+            attr.addFlashAttribute("msg", "Empleado borrado exitosamente");
         }
-        attr.addFlashAttribute("msg", "usuario borrado exitosamente");
         return "redirect:/employee";
+    }
+
+    public List<Employee> getListaJefes() {
+        List<Employee> listaJefes = employeeRepository.findAll();
+        Employee e = new Employee();
+        e.setId(0);
+        e.setFirstname("--No tiene Jefe--");
+        listaJefes.add(0, e);
+        return listaJefes;
     }
 }
