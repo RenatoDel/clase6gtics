@@ -5,10 +5,7 @@ import com.example.clase6gtics.repository.ShipperRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
@@ -34,12 +31,13 @@ public class ShipperController {
     }
 
     @GetMapping("/new")
-    public String nuevoTransportistaFrm() {
+    public String nuevoTransportistaFrm(@ModelAttribute("shipper") Shipper shipper,Model model) {
         return "shipper/newFrm";
     }
 
     @PostMapping("/save")
-    public String guardarNuevoTransportista(Shipper shipper, Model model, RedirectAttributes attr) {
+    public String guardarNuevoTransportista(@ModelAttribute("shipper")  Shipper shipper,
+                                            Model model, RedirectAttributes attr) {
 
         if (shipper.getCompanyName().equals("")) {
             model.addAttribute("errorCompany", "El nombre no puede ser vacío");
@@ -56,15 +54,15 @@ public class ShipperController {
     }
 
     @GetMapping("/edit")
-    public String editarTransportista(Model model,
-                                      @RequestParam("id") int id) {
+    public String editarTransportista(@ModelAttribute("shipper") Shipper shipper ,
+                                      Model model, @RequestParam("id") int id) {
 
         Optional<Shipper> optShipper = shipperRepository.findById(id);
 
         if (optShipper.isPresent()) {
-            Shipper shipper = optShipper.get();
+            shipper = optShipper.get();
             model.addAttribute("shipper", shipper);
-            return "shipper/editFrm";
+            return "shipper/newFrm";
         } else {
             return "redirect:/shipper/list";
         }
